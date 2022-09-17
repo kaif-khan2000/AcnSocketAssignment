@@ -9,7 +9,7 @@
 #define SIZE 1024
 
 using namespace std;
-void write_file(char *filename, int sockfd)
+void write_file(char *filename,int length, int sockfd)
 {
     printf("\nEntered write file\n");
     int n;
@@ -17,22 +17,14 @@ void write_file(char *filename, int sockfd)
     char buffer[SIZE];
 
     fp = fopen(filename, "w");
-    // n = recv(sockfd, buffer, SIZE, 0);
-    //  fprintf(fp, "%s", buffer);
-
-    while (1)
+    int remaining_data = length, received_data_len;
+    while ((remaining_data > 0) && ((received_data_len = recv(sockfd, buffer, 1024, 0)) > 0))
     {
-        n = recv(sockfd, buffer, SIZE, 0);
-        printf("\n%d\n", n);
-        printf("Buffer %s \n ", buffer);
-        if (n <= 0)
-        {
-            break;
-        }
-        fprintf(fp, "%s", buffer);
-        bzero(buffer, SIZE);
+        fwrite(buffer, sizeof(char), received_data_len, fp);
+        remaining_data -= received_data_len;
+        printf("Received %d/%d bytes\n", (length - remaining_data), length);
     }
-    fclose(fp);
+    
     return;
 }
 
@@ -85,26 +77,9 @@ int main()
         exit(0);
     }
 
-    write_file(filename, sockfd);
-    // FILE *fp = fopen(filename, "w");
-    // if (fp == NULL)
-    // {
-    //     cout << "Error in opening file" << endl;
-    //     exit(0);
-    // }
+    int length = atoi(status);
 
-    // while (true)
-    // {
-    //     char buffer[1024];
-    //     memset(buffer, 0, 1024);
-    //     if ((recv(sockfd, buffer, 1024, 0)) <= 0)
-    //     {
-    //         break;
-    //     }
-    //     cout << buffer << endl;
-    //     fprintf(fp, "%s", buffer);
-    // }
-    // fclose(fp);
+    write_file(filename,length, sockfd);
     close(sockfd);
     return 0;
 }

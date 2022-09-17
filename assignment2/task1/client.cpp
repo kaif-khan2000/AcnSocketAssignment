@@ -6,8 +6,27 @@
 #include<string.h>
 #include<stdlib.h>
 #include<iostream>
+#define SIZE 1024
 
 using namespace std;
+void write_file(char *filename,int length, int sockfd)
+{
+    printf("\nEntered write file\n");
+    int n;
+    FILE *fp;
+    char buffer[SIZE];
+
+    fp = fopen(filename, "w");
+    int remaining_data = length, received_data_len;
+    while ((remaining_data > 0) && ((received_data_len = recv(sockfd, buffer, 1024, 0)) > 0))
+    {
+        fwrite(buffer, sizeof(char), received_data_len, fp);
+        remaining_data -= received_data_len;
+        printf("Received %d/%d bytes\n", (length - remaining_data), length);
+    }
+    
+    return;
+}
 int createClient() {
     //socket creation
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -36,10 +55,14 @@ int createClient() {
 int main() {
     int sockfd = createClient();
     //send filename to server
-    char filename[1024];
+    char filename[1024], path[1024];
+    cout << "Enter path of directory: ";
+    cin >> path;
     cout << "Enter filename: ";
     cin >> filename;
-    send(sockfd, filename, 1024, 0);
+    strcat(path, filename);
+    
+    send(sockfd, path, 1024, 0);
     //receive status from server
     char status[1024];
     recv(sockfd, status, 1024, 0);
@@ -48,24 +71,9 @@ int main() {
         close(sockfd);
         exit(0);
     }
-    FILE *fp = fopen("file1.txt", "w");
-    if (fp == NULL) {
-        cout << "Error in opening file" << endl;
-        exit(0);
-    }
-    
-    
-    while (true) {
-        char buffer[1024];
-        memset(buffer, 0, 1024);
-        if((recv(sockfd, buffer, 1024, 0)) <= 0){
-            break;
-        }
-        cout << buffer << endl;
-        //add /0 at the end of buffer
-        fputs(buffer, fp);
-    }
-    fclose(fp);
+    int length = atoi(status);
+    write_file(filename,length, sockfd);
+
     close(sockfd);
     return 0;
 }

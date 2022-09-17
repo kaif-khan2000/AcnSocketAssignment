@@ -7,23 +7,25 @@
 #include <stdlib.h>
 #include <iostream>
 #include <thread>
+#include <sys/stat.h>
+
 #define SIZE 1024
 using namespace std;
 void send_file(FILE *fp, int sockfd)
 {
     int n;
     char data[SIZE] = {0};
-
-    while (fgets(data, SIZE, fp) != NULL)
+    
+    while ((n=fread(data, sizeof(char) , 1024, fp))>0)
     {
-        printf("data is %s \n", data);
-        if (send(sockfd, data, sizeof(data), 0) == -1)
+        if (send(sockfd, data, n, 0) == -1)
         {
             perror("[-]Error in sending file.");
             exit(1);
         }
         bzero(data, SIZE);
     }
+    printf("File is sucessfully sent\n");
     close(sockfd);
 }
 
@@ -67,15 +69,20 @@ void handleClient(int sock)
         cout << "Socket accepted" << endl;
         char filename[1024];
         recv(sockfd, filename, 1024, 0);
-        FILE *fp = fopen(filename, "r");
+        FILE *fp = fopen(filename, "rb");
         if (fp == NULL)
         {
-            cout << "Error in opening file " << filename << endl;
             char status[1024] = "File not found";
+            cout << "Error in opening file " << filename << endl;
             send(sockfd, status, 1024, 0);
             close(sockfd);
             continue;
         }
+        struct stat file_stats;
+        stat(filename, &file_stats);
+        char status[1024];
+        sprintf(status,"%d",(int)file_stats.st_size);
+        send(sockfd,status,1024,0);
         send_file(fp, sockfd);
         // char status[1024] = "File found";
         // send(sockfd, status, 1024, 0);

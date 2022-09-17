@@ -6,8 +6,29 @@
 #include<string.h>
 #include<stdlib.h>
 #include<iostream>
+#include <sys/stat.h>
 
+#define SIZE 1024
 using namespace std;
+
+void send_file(FILE *fp, int sockfd)
+{
+    int n;
+    char data[SIZE] = {0};
+    
+    while ((n=fread(data, sizeof(char) , 1024, fp))>0)
+    {
+        if (send(sockfd, data, n, 0) == -1)
+        {
+            perror("[-]Error in sending file.");
+            exit(1);
+        }
+        bzero(data, SIZE);
+    }
+    printf("File is sucessfully sent\n");
+    
+}
+
 int createServer() {
     //socket creation
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -59,13 +80,13 @@ int main() {
         close(sockfd);
         exit(0);
     }
-    char status[1024] = "File found";
-    send(sockfd, status, 1024, 0);
-    char buffer[1024];
-    while (fgets(buffer, 1024, fp) != NULL) {
-        cout << buffer << endl;
-        send(sockfd, buffer, strlen(buffer), 0);
-    }
+    struct stat file_stats;
+    stat(filename, &file_stats);
+    char status[1024];
+    sprintf(status,"%d",(int)file_stats.st_size);
+    send(sockfd,status,1024,0);
+    send_file(fp, sockfd);
+    
     fclose(fp);
     close(sockfd);
     return 0;
