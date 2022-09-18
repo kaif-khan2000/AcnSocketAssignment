@@ -16,7 +16,7 @@ void write_file(char *filename,int length, int sockfd)
     FILE *fp;
     char buffer[SIZE];
 
-    fp = fopen(filename, "w");
+    fp = fopen(filename, "wb");
     int remaining_data = length, received_data_len;
     while ((remaining_data > 0) && ((received_data_len = recv(sockfd, buffer, 1024, 0)) > 0))
     {

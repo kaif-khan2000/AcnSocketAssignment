@@ -72,7 +72,7 @@ int main() {
     int sockfd = createServer();
     char filename[1024];
     recv(sockfd, filename, 1024, 0);
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(filename, "rb");
     if (fp == NULL) {
         cout << "Error in opening file" << endl;
         char status[1024] = "File not found";
