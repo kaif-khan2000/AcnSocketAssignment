@@ -55,12 +55,19 @@ int createClient() {
 int main() {
     int sockfd = createClient();
     //send filename to server
-    char filename[1024], path[1024];
-    cout << "Enter path of directory: ";
+    char filename[1024];
+    char path[1024];
+    cout << "Enter path of file: ";
     cin >> path;
-    cout << "Enter filename: ";
-    cin >> filename;
-    strcat(path, filename);
+    char temp[1024];
+    strcpy(temp,path);
+    char *token = strtok(temp, "/");
+    while (token != NULL)
+    {
+        strcpy(filename, token);
+        token = strtok(NULL, "/");
+    }
+    cout << "Filename:" << filename << endl;
     
     send(sockfd, path, 1024, 0);
     //receive status from server

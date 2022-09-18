@@ -69,6 +69,7 @@ void handleClient(int sock)
         cout << "Socket accepted" << endl;
         char filename[1024];
         recv(sockfd, filename, 1024, 0);
+        cout << "Filename received "<<filename << endl;
         FILE *fp = fopen(filename, "rb");
         if (fp == NULL)
         {
