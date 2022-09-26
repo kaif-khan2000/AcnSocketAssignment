@@ -7,12 +7,17 @@ task1 and task2 contains 2 files each
 2. client.cpp
 
 you can compile these using g++ compiler
+1. g++ fileServer.cpp -o server
+if the above throws error then try (because of compiler version)
+(or) g++ -pthread fileServer.cpp -o server
 
-task1's fileServer can only connect to one client, once the file transfer is done, it will end.
+2. g++ client.cpp -o client
+
+task1's fileServer can only connect to one client, once the file transfer is done, it will end the connection.
 
 task2's fileServer can connect to multiple clients (5 in this case), any more will get queued.
 
-when client prompts to "enter path:" provide the actual path in server machine EX: /home/kaif/quiz.pdf
+when client prompts to "enter path:" provide the actual path in server machine EX: /home/kaif/quiz.pdf or relative path to PWD
 
 if the file is present it will send the file size and file otherwise it will send file not found.
 
