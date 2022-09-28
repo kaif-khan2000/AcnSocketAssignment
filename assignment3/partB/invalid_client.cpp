@@ -13,16 +13,16 @@
 using namespace std;
 void write_file(char *filename, int length, int sockfd)
 {
-    // printf("\nEntered write file\n");
+    //printf("\nEntered write file\n");
     int n;
     FILE *fp;
     char buffer[SIZE];
 
-    // opening file in write mode
+    //opening file in write mode
     fp = fopen(filename, "wb");
     int remaining_data = length, received_data_len;
-
-    // writing data into the file.
+    
+    //writing data into the file.
     while ((remaining_data > 0) && ((received_data_len = recv(sockfd, buffer, 1024, 0)) > 0))
     {
         fwrite(buffer, sizeof(char), received_data_len, fp);
@@ -55,13 +55,13 @@ int createClient(Server fileServer)
     }
     cout << "Socket connected" << endl;
 
-    // sending access token
+    //sending access token
     char buffer[1024];
-    sprintf(buffer, "%d", fileServer.accessToken);
+    sprintf(buffer, "%d", (fileServer.accessToken+1));
     send(sockfd, buffer, strlen(buffer), 0);
     bzero(buffer, 1024);
 
-    // receive access token to be correct or not.
+    //receive access token to be correct or not.
     int n = recv(sockfd, buffer, 1024, 0);
     buffer[n] = '\0';
     if (strcmp(buffer, "Token invalid") == 0)
@@ -81,7 +81,7 @@ int createClient(Server fileServer)
 int main()
 {
 
-    // creating a UDP socket
+    //creating a UDP socket
     int sock2 = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock2 < 0)
     {
@@ -94,99 +94,94 @@ int main()
     peer.sin_addr.s_addr = inet_addr("127.0.0.1");
     socklen_t len = sizeof(peer);
 
-    // sending a request to the bootstrapserver
+    //sending a request to the bootstrapserver
     char buffer[1024];
-    sprintf(buffer, "2@get");
+    sprintf(buffer,"2@get");
     sendto(sock2, buffer, strlen(buffer), 0, (sockaddr *)&peer, len);
     bzero(buffer, 1024);
 
-    // receiving the no.of servers
+    //receiving the no.of servers
     recvfrom(sock2, buffer, 1024, 0, (sockaddr *)&peer, &len);
     int n = atoi(buffer);
     cout << "Number of fileServers: " << n << endl;
     string fileServers[n];
 
-    // receiving the fileServers information
+    //receiving the fileServers information
     for (int i = 0; i < n; i++)
     {
         bzero(buffer, 1024);
         recvfrom(sock2, buffer, 1024, 0, (sockaddr *)&peer, &len);
         Message msg = Message(buffer);
         fileServers[i] = msg.msg;
-        cout << "[" << (i + 1) << "] " << fileServers[i] << endl;
+        cout << "[" << (i+1) << "] " << fileServers[i] << endl;
     }
 
-    // reading fileserver number from user
-    //  cout << "Enter the fileServer number: ";
-    //  int fileServerNumber;
-    //  cin >> fileServerNumber;
-    //  fileServerNumber--;
-    for (int i = 0; i < n; i++)
+    //reading fileserver number from user
+    cout << "Enter the fileServer number: ";
+    int fileServerNumber;
+    cin >> fileServerNumber;
+    fileServerNumber--;
+    
+    //creating a fileServer object
+    Server fileServer = Server(fileServers[fileServerNumber]);
+
+    //creating a client, i.e connecting to the fileServer
+    int sockfd = createClient(fileServer);
+    if (sockfd == -1)
     {
-        // creating a fileServer object
-        Server fileServer = Server(fileServers[i]);
-
-        cout << "\n\n----->Connected to FileServer: " << fileServer.servicename << endl;
-
-        // creating a client, i.e connecting to the fileServer
-        int sockfd = createClient(fileServer);
-        if (sockfd == -1)
-        {
-            return 0;
-        }
-        // send filename to server
-        char filename[1024];
-        char path[1024];
-        cout << "Enter path of file: ";
-        cin >> path;
-        char temp[1024];
-
-        // fetching filename from path
-        strcpy(temp, path);
-        char *token = strtok(temp, "/");
-        while (token != NULL)
-        {
-            strcpy(filename, token);
-            token = strtok(NULL, "/");
-        }
-        cout << "Filename:" << filename << endl;
-
-        // sending path to fileserver
-        send(sockfd, path, strlen(path), 0);
-
-        // check ig the filetype is valid or not
-        bzero(buffer, 1024);
-        int k = recv(sockfd, buffer, 1024, 0);
-        buffer[k] = '\0';
-        if (strcmp(buffer, "Invalid file type") == 0)
-        {
-            cout << "Invalid file type" << endl;
-            close(sockfd);
-            continue;
-        }
-        else
-        {
-            cout << "Valid file type" << endl;
-        }
-
-        // receive status of file from server
-        char status[1024];
-        recv(sockfd, status, 1024, 0);
-        if (strcmp(status, "File not found") == 0)
-        {
-            cout << "File not found" << endl;
-            close(sockfd);
-            continue;
-        }
-
-        // if file is found, receive length of file so convert into int
-        int length = atoi(status);
-
-        // receive file from server and write to file
-        write_file(filename, length, sockfd);
-
-        // close the socket
-        close(sockfd);
+        return 0;
     }
+    // send filename to server
+    char filename[1024];
+    char path[1024];
+    cout << "Enter path of file: ";
+    cin >> path;
+    char temp[1024];
+
+    //fetching filename from path
+    strcpy(temp, path);
+    char *token = strtok(temp, "/");
+    while (token != NULL)
+    {
+        strcpy(filename, token);
+        token = strtok(NULL, "/");
+    }
+    cout << "Filename:" << filename << endl;
+    
+    //sending path to fileserver
+    send(sockfd, path, strlen(path), 0);
+    
+    //check ig the filetype is valid or not
+    bzero(buffer, 1024);
+    n = recv(sockfd, buffer, 1024, 0);
+    buffer[n] = '\0';
+    if (strcmp(buffer, "Invalid file type") == 0)
+    {
+        cout << "Invalid file type" << endl;
+        return 0;
+    }
+    else
+    {
+        cout << "Valid file type" << endl;
+    }
+
+    // receive status of file from server
+    char status[1024];
+    recv(sockfd, status, 1024, 0);
+    if (strcmp(status, "File not found") == 0)
+    {
+        cout << "File not found" << endl;
+        close(sockfd);
+        exit(0);
+    }
+
+    //if file is found, receive length of file so convert into int
+    int length = atoi(status);
+
+    //receive file from server and write to file
+    write_file(filename, length, sockfd);
+
+    //close the socket
+    close(sockfd);
     return 0;
 }

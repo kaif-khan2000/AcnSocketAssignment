@@ -67,7 +67,8 @@ int main() {
         char buf[SIZE];
         sockaddr_in client;
         socklen_t len = sizeof(client);
-        recvfrom(sock, buf, SIZE-1, 0, (sockaddr *)&client, &len);
+        int n = recvfrom(sock, buf, SIZE-1, 0, (sockaddr *)&client, &len);
+        buf[n] = '\0';
         cout << "Message received: " << buf << endl;
         handleMessage(sock,client,len,buf);
     }
