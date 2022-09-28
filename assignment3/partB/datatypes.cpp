@@ -88,6 +88,17 @@ public:
         this->accessToken = atoi(strtok(NULL, " "));
     }
 
+    Server(string str)
+    {
+        char buf[SIZE];
+        strcpy(buf, str.c_str());
+        strcpy(this->ip, strtok(buf, " "));
+        this->port = atoi(strtok(NULL, " "));
+        strcpy(this->servicename, strtok(NULL, " "));
+        strcpy(this->type, strtok(NULL, " "));
+        this->accessToken = atoi(strtok(NULL, " "));
+    }
+
 public:
     int registerServer()
     {

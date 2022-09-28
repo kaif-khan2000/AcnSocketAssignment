@@ -13,6 +13,9 @@
 #define SIZE 1024
 using namespace std;
 
+int accessToken;
+char type[10];
+
 void send_file(FILE *fp, int sockfd)
 {
     int n;
@@ -68,10 +71,32 @@ void handleClient(int sock)
             cout << "Error in accepting" << endl;
             exit(0);
         }
+        char buffer[1024];
+        recv(sockfd, buffer, 1024, 0);
+        if (atoi(buffer) != accessToken)
+        {
+            cout << "Invalid access token" << endl;
+            close(sockfd);
+            continue;
+        }
         cout << "Socket accepted" << endl;
         char filename[1024];
         recv(sockfd, filename, 1024, 0);
         cout << "Filename received "<<filename << endl;
+        char fileType[10];
+        for(int i=strlen(filename)-1;i>=0;i++){
+            if(filename[i]=='.'){
+                strcpy(fileType,filename+i+1);
+                break;
+            }
+        }
+        if (strcmp(fileType, type) != 0)
+        {
+            cout << "Invalid file type" << endl;
+            close(sockfd);
+            continue;
+        }
+        
         FILE *fp = fopen(filename, "rb");
         if (fp == NULL)
         {
@@ -111,11 +136,11 @@ int main()
     cout << "Enter service name: ";
     cin >> servicename;
 
-    char type[10];
+ 
     cout << "Enter type (mkv,pdf,jpeg,png etc.): ";
     cin >> type;
 
-    int accessToken;
+    
     cout << "Enter access token: ";
     cin >> accessToken;
 
