@@ -21,15 +21,16 @@ void handleMessage(int sock, sockaddr_in client,socklen_t len, char buf[]){
     cout << "Message received: " << msg.msg << "message Type: " << msg.msgType << endl;
     switch(msg.msgType){
         case 1:
-            // register
+            // register the server
             serverList[serverCount++] = Server(msg.msg);
             cout << "Server registered: " << msg.msg << endl;
             char buf[SIZE];
             sprintf(buf,"1");
             sendto(sock, buf, SIZE, 0, (struct sockaddr *)&client, len);
             break;
+
         case 2:
-            // discover, send all servers to client
+            // send all servers infromation to client
             char buf2[SIZE];
             sprintf(buf2,"%d",serverCount);
             sendto(sock, buf2, strlen(buf2), 0, (struct sockaddr *)&client, len);    
@@ -41,17 +42,20 @@ void handleMessage(int sock, sockaddr_in client,socklen_t len, char buf[]){
             }
             break;
         default:
+            //invalid message
             cout << "Invalid message type" << endl;
     }
 }
 
 int main() {
+    //create a socket
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock < 0)
     {
         cerr << "socket error" << endl;
         return 1;
     }
+    //bind the socket to an IP address and port
     sockaddr_in local;
     local.sin_family = AF_INET;
     local.sin_port = htons(1234);
@@ -63,11 +67,13 @@ int main() {
     }
     cout << "Bind success" << endl;
 
+    // now receive messages from clients or servers and handle them accordingly.
     while(true){
         char buf[SIZE];
         sockaddr_in client;
         socklen_t len = sizeof(client);
-        recvfrom(sock, buf, SIZE-1, 0, (sockaddr *)&client, &len);
+        int n = recvfrom(sock, buf, SIZE-1, 0, (sockaddr *)&client, &len);
+        buf[n] = '\0';
         cout << "Message received: " << buf << endl;
         handleMessage(sock,client,len,buf);
     }
